@@ -1,0 +1,28 @@
+# OS files
+.DS_Store
+
+# Editors
+.vscode/
+.idea/
+
+# Kubernetes local files
+kubeconfig
+*.kubeconfig
+
+# Local secrets
+k8s/secret.yaml
+.env
+.env.*
+
+# Logs
+*.log
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+
+# Temporary files
+*.tmp
+*.swp

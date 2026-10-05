@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payment-config
+  namespace: payment-platform
+data:
+  LOG_LEVEL: "INFO"
+  REQUEST_TIMEOUT_S: "3.0"
+  CONNECT_TIMEOUT_S: "1.0"
+  MAX_RETRIES: "2"
+  BACKOFF_BASE_S: "0.1"
+  DECLINE_OVER: "1000000"
+  FAILURE_RATE: "0"
+  LATENCY_MS: "0"

@@ -1,0 +1,116 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-gateway
+  namespace: payment-platform
+spec:
+  replicas: 2
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+
+  selector:
+    matchLabels:
+      app: payment-gateway
+
+  template:
+    metadata:
+      labels:
+        app: payment-gateway
+
+    spec:
+      serviceAccountName: payment-service
+
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+
+      containers:
+        - name: payment-gateway
+          image: rajatg/payment-gateway:1.0.0
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - name: http
+              containerPort: 8080
+
+          env:
+            - name: PROCESSOR_URL
+              value: "http://payment-processor:8080"
+
+            - name: SERVICE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: payment-secret
+                  key: SERVICE_TOKEN
+
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: payment-config
+                  key: LOG_LEVEL
+
+            - name: REQUEST_TIMEOUT_S
+              valueFrom:
+                configMapKeyRef:
+                  name: payment-config
+                  key: REQUEST_TIMEOUT_S
+
+            - name: CONNECT_TIMEOUT_S
+              valueFrom:
+                configMapKeyRef:
+                  name: payment-config
+                  key: CONNECT_TIMEOUT_S
+
+            - name: MAX_RETRIES
+              valueFrom:
+                configMapKeyRef:
+                  name: payment-config
+                  key: MAX_RETRIES
+
+            - name: BACKOFF_BASE_S
+              valueFrom:
+                configMapKeyRef:
+                  name: payment-config
+                  key: BACKOFF_BASE_S
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            failureThreshold: 30
+            periodSeconds: 2
+
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
